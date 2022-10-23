@@ -64,14 +64,26 @@ class EventHandler:
             except Exception as exception:
                 self.logger.exception("Exception publishing event %s", exception)
 
+class MessageProcessor:
+    _commands: CommandExecutor
+    _events: EventHandler
 
+    @inject.autoparams()
+    def __init__(self, commands: CommandExecutor, events: EventHandler) -> None:
+        self._commands = commands
+        self._events = events
+
+    def process(self, message: Message) -> Any:
+        if isinstance(message, Command):
+            return self._commands.execute(message)
+        return self._events.handle(message)
     
 @inject.autoparams()
-def load_file(cmd: LoadFileCommand, handler: EventHandler):
+def load_file(cmd: LoadFileCommand, messages: MessageProcessor):
     with open(cmd.filename, "br") as f:
         content = f.read()
     event = FileLoadedEvent(correlation_id=cmd.correlation_id, filename=cmd.filename, size=len(content), content=content)
-    handler.handle(event)
+    messages.process(event)
     return content
 
 def on_file_loaded(event: FileLoadedEvent):
@@ -79,17 +91,15 @@ def on_file_loaded(event: FileLoadedEvent):
 
 
 @inject.autoparams()
-def main(executor: CommandExecutor, handler: EventHandler):
+def main(executor: CommandExecutor, handler: EventHandler, messages: MessageProcessor):
     basicConfig(level="DEBUG")
-    executor = CommandExecutor()
-    handler = EventHandler()
     # Configure file loading algorithm
     executor.executors[LoadFileCommand] = load_file
     # Configure file loaded event handling algorithm
     handler.observe(FileLoadedEvent, on_file_loaded)
 
     command = LoadFileCommand()
-    executor.execute(command)
+    messages.process(command)
 
 
 def configure(binder: inject.Binder):
