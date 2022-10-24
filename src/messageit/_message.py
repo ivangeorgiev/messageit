@@ -49,14 +49,21 @@ class Handler(ABC):
         """Handle the message and returns the result"""
 
 
-class CommandHandler(Handler):
-    """Abstract command handling class.
-    
-    Could be used for type-based dependency injection.
-    """
+class ProxyHandler(Handler):
+    handler: Handler
+
+    def __init__(self, handler: Handler):
+        self.handler = handler
+
+    def register(self, subject: Hashable, handler: Callable):
+        return self.handler.register(subject, handler)
+
+    def handle(self, message: Any) -> Any:
+        return self.handler.handle(message)
 
 
-class Executor(CommandHandler):
+
+class Executor(Handler):
     """Handler which executes messages based on message type
     
     Example:
@@ -110,15 +117,7 @@ class Executor(CommandHandler):
         self._logger.debug(f"EXECUTING: {message} with {executor}")
         return executor(message)
 
-
-class EventHandler(Handler):
-    """Abstract event handling class.
-    
-    Could be used for type-based dependency injection.
-    """
-    ...
-
-class Publisher(EventHandler):
+class Publisher(Handler):
     """Handler which supports a list of subscribers per message type
     
     Example:
@@ -156,3 +155,24 @@ class Publisher(EventHandler):
                 self._logger.exception("EXCEPTION publishing %s", message)
                 result.append(exception)
         return result
+
+
+class CommandExecutor(ProxyHandler):
+    """Abstract command handling class.
+    
+    Could be used for type-based dependency injection.
+    """
+    
+    def __init__(self, handler: Handler = None) -> None:
+        super().__init__(handler or Executor())
+
+
+
+class EventPublisher(ProxyHandler):
+    """Dependency Abstract event handling class.
+    
+    Could be used for type-based dependency injection.
+    """
+
+    def __init__(self, handler: Handler = None):
+        super().__init__(handler or Publisher())

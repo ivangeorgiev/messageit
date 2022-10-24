@@ -2,7 +2,7 @@ from unittest.mock import Mock
 from uuid import UUID
 import pytest
 
-from messageit import Message, Command, Event, Executor, Publisher
+from messageit import Message, Command, Event, Executor, Handler, Publisher, ProxyHandler, CommandExecutor, EventPublisher
 
 class FakeMessage(Message):
     ...
@@ -123,3 +123,47 @@ class TestPublisherClass:
         result = publisher.handle(subscribed_instance)
         assert result == [subscriber1.side_effect, subscriber2.return_value]
 
+
+class TestProxyHandlerClass:
+
+    @pytest.fixture(name="handler")
+    def given_handler(self):
+        return Mock()
+
+    @pytest.fixture(name="proxy")
+    def given_proxy(self, handler):
+        return ProxyHandler(handler)
+
+    def test_handler_is_set(self, proxy: Handler, handler: Mock):
+        assert proxy.handler is handler
+
+    def test_proxy_register_calls_handler(self, proxy: ProxyHandler, handler: Mock):
+        subject = Mock()
+        subject_handler = Mock()
+        result = proxy.register(subject, subject_handler)
+        handler.register.assert_called_once_with(subject, subject_handler)
+        assert result == handler.register.return_value
+
+    def test_proxy_handle_calls_handler(self, proxy: ProxyHandler, handler: Mock):
+        message = Mock()
+        result = proxy.handle(message)
+        handler.handle.assert_called_once_with(message)
+        assert result == handler.handle.return_value
+
+class TestCommandExecutorClass:
+
+    @pytest.fixture(name="executor")
+    def given_executor(self):
+        return CommandExecutor()
+
+    def test_decorated_executor_is_set(self, executor: CommandExecutor):
+        assert isinstance(executor.handler, Executor)
+
+class TestEventPublisherClass:
+
+    @pytest.fixture(name="publisher")
+    def given_publisher(self):
+        return EventPublisher()
+
+    def test_decorated_publisher_is_set(self, publisher: EventPublisher):
+        assert isinstance(publisher.handler, Publisher)

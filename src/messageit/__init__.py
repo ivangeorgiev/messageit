@@ -43,13 +43,14 @@ while True:
 
 from ._message import (
     Command,
-    CommandHandler,
+    CommandExecutor,
     Event,
-    EventHandler,
-    Message,
-    Handler,
+    EventPublisher,
     Executor,
+    Handler,
+    Message,
+    ProxyHandler,
     Publisher,
 )
 
-__version__ = "0.0.dev1"
+__version__ = "0.1.0"
