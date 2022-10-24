@@ -1,5 +1,5 @@
 # messageit
-Message and Event Passing with Python
+Message (Command and Event) passing for Python
 
 ## Examples
 
