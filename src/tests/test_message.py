@@ -22,8 +22,8 @@ class TestMessageClass:
     def test_message_id_is_auto_set(self, message: Message):
         assert isinstance(message.message_id, UUID)
 
-    def test_correlation_id_is_none(self, message: Message):
-        assert message.correlation_id is None
+    def test_correlation_id_is_message_id_by_default(self, message: Message):
+        assert message.correlation_id is message.message_id
 
 
 class TestExecutorClass:

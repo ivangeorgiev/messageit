@@ -1,5 +1,3 @@
-
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from logging import Logger, getLogger
@@ -158,5 +156,3 @@ class Publisher(EventHandler):
                 self._logger.exception("EXCEPTION publishing %s", message)
                 result.append(exception)
         return result
-
-Publisher()
