@@ -134,6 +134,16 @@ while True:
     result = events.handle(MessageReceived(message=message))
 ```
 
+### Running bundled examples
+
+```bash
+$ python -m messageit.examples.ex1
+...
+$ python -m messageit.examples.ex2
+...
+```
+
+
 ## Package and publish
 
 To run the tests:
